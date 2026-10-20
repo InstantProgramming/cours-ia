@@ -1,6 +1,6 @@
 [project]
 name = "cours-ia"
-version = "0.2.0"
+version = "0.2.1"
 description = "Transforme une vidéo de cours en fiche de révision, schémas, animations et quiz."
 authors = [
     { name = "Alban Bajraktari", email = "alban@instant-programming.Com" }

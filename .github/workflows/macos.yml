@@ -38,7 +38,6 @@ jobs:
           pkill -f "python -m cours_ia" || true
 
       - name: Test — transcription MLX, diarisation, Codex
-        continue-on-error: true
         run: |
           H="$HOME/Library/Application Support/CoursIA"; V="$(cat "$H/current")"
           say -v Thomas -o test.aiff "Bonjour. Aujourd'hui nous étudions la réforme du droit des contrats de deux mille seize et la responsabilité contractuelle." \

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -13,6 +14,23 @@ import imageio_ffmpeg
 def ffmpeg_bin() -> str:
     """ffmpeg système si présent, sinon le binaire embarqué par imageio-ffmpeg."""
     return shutil.which("ffmpeg") or imageio_ffmpeg.get_ffmpeg_exe()
+
+
+def ensure_ffmpeg_on_path() -> None:
+    """Parakeet-MLX et Whisper-MLX lancent la commande `ffmpeg` : sur un Mac sans Homebrew elle n'existe pas.
+    On expose alors le binaire d'imageio-ffmpeg sous ce nom, en tête du PATH du processus."""
+    if shutil.which("ffmpeg"):
+        return
+    home = Path(os.environ.get("COURS_IA_HOME", Path.home() / ".cours-ia")) / "ffmpeg-bin"
+    home.mkdir(parents=True, exist_ok=True)
+    src = Path(imageio_ffmpeg.get_ffmpeg_exe())
+    link = home / ("ffmpeg.exe" if os.name == "nt" else "ffmpeg")
+    if not link.exists():
+        try:
+            link.symlink_to(src)
+        except OSError:
+            shutil.copy2(src, link)
+    os.environ["PATH"] = str(home) + os.pathsep + os.environ.get("PATH", "")
 
 
 def download_url(url: str, dest_dir: Path, log=print) -> tuple[Path, str]:

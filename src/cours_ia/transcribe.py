@@ -65,8 +65,13 @@ def pick_engine(cfg: dict) -> str:
 
 def transcribe(wav: Path, cfg: dict, *, glossary: str = "", log=print) -> dict:
     """Renvoie {"engine", "model", "language", "segments": [{start, end, text, speaker?}]}."""
+    from .ingest import ensure_ffmpeg_on_path
+
+    ensure_ffmpeg_on_path()
     engine = pick_engine(cfg)
     model = cfg.get("asr_model") or DEFAULT_MODELS[engine]
+    if engine in ("parakeet", "mlx-whisper"):
+        log("Chargement du modèle de transcription (la toute première fois : téléchargement d'environ 1 Go)…")
     lang = cfg.get("language") or "fr"
     log(f"Transcription avec {engine} ({model})…")
     if engine == "parakeet":
