@@ -1,0 +1,24 @@
+COURS IA — installation
+=======================
+
+1. Glisse « Cours IA » sur le dossier « Applications » (à côté).
+
+2. Ouvre Cours IA depuis le dossier Applications (ou le Launchpad).
+
+   La première fois, macOS affiche « Apple n'a pas pu vérifier… » (l'appli
+   n'est pas publiée sur l'App Store). Pour l'autoriser, une seule fois :
+     • clique « Terminé » sur le message,
+     • ouvre Réglages Système → Confidentialité et sécurité,
+     • tout en bas, à côté de « Cours IA a été bloqué », clique « Ouvrir quand même »,
+     • confirme avec ton mot de passe ou Touch ID.
+
+3. Premier lancement : l'installation prend 3 à 5 minutes (une notification
+   s'affiche, la fenêtre s'ouvre toute seule ensuite). Il faut être connecté à
+   internet.
+
+4. Dans l'appli, clique « Se connecter » pour relier ton compte ChatGPT.
+
+Les mises à jour se font depuis l'appli : un bandeau « Nouvelle version »
+apparaît, il suffit de cliquer sur « Mettre à jour ».
+
+Tes cours sont enregistrés dans Documents ▸ CoursIA.

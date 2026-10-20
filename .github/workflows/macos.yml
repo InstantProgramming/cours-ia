@@ -1,0 +1,67 @@
+name: App Mac
+
+# Une étiquette vX.Y.Z construit le .dmg, le teste sur un Mac Apple Silicon et publie la release
+# (que l'appli détecte pour se mettre à jour). Lancement manuel : build + tests seulement.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-14
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier le numéro de version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          V="$(sed -n 's/^__version__ = "\(.*\)"/\1/p' src/cours_ia/__init__.py)"
+          test "v$V" = "$GITHUB_REF_NAME" || { echo "::error::__version__ ($V) ≠ étiquette ($GITHUB_REF_NAME)"; exit 1; }
+
+      - name: Construire le .app et le .dmg
+        run: bash packaging/build_macos.sh
+
+      - name: Test — premier lancement (installation + serveur)
+        run: |
+          export COURS_IA_NO_WINDOW=1 COURS_IA_NO_BROWSER=1 COURS_IA_DATA="$RUNNER_TEMP/data"
+          "dist/Cours IA.app/Contents/MacOS/CoursIA" &
+          for i in $(seq 1 200); do curl -sf http://127.0.0.1:8765/api/status -o status.json && break; sleep 5; done
+          tail -n 40 "$HOME/Library/Application Support/CoursIA/logs/launcher.log" || true
+          python3 -m json.tool status.json
+          python3 -c "import json; s=json.load(open('status.json')); assert 'parakeet' in s['engines'], s['engines']"
+          curl -sf http://127.0.0.1:8765/ | grep -q "Cours IA"
+          pkill -f "python -m cours_ia" || true
+
+      - name: Test — transcription MLX, diarisation, Codex
+        continue-on-error: true
+        run: |
+          H="$HOME/Library/Application Support/CoursIA"; V="$(cat "$H/current")"
+          say -v Thomas -o test.aiff "Bonjour. Aujourd'hui nous étudions la réforme du droit des contrats de deux mille seize et la responsabilité contractuelle." \
+            || say -o test.aiff "Bonjour, ceci est un test de transcription."
+          cp packaging/ci_smoke.py "$RUNNER_TEMP/"
+          UV_PROJECT_ENVIRONMENT="$H/venv" UV_PYTHON_INSTALL_DIR="$H/python" UV_CACHE_DIR="$H/cache" \
+            "dist/Cours IA.app/Contents/Resources/bin/uv" run --frozen --no-sync --project "$H/versions/$V" \
+            python "$RUNNER_TEMP/ci_smoke.py" test.aiff
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CoursIA-mac
+          path: |
+            dist/*.dmg
+            dist/*.tar.gz
+
+      - name: Publier la release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          # notes de version : la section « ## V » du CHANGELOG (affichée dans l'appli)
+          awk -v v="$V" '$0 ~ "^## "v {f=1; next} /^## / {f=0} f' CHANGELOG.md > notes.md
+          gh release create "$GITHUB_REF_NAME" dist/CoursIA-$V.dmg dist/cours-ia-$V.tar.gz \
+            --title "Cours IA $V" --notes-file notes.md

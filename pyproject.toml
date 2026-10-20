@@ -1,0 +1,36 @@
+[project]
+name = "cours-ia"
+version = "0.2.0"
+description = "Transforme une vidéo de cours en fiche de révision, schémas, animations et quiz."
+authors = [
+    { name = "Alban Bajraktari", email = "alban@instant-programming.Com" }
+]
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+    "python-multipart>=0.0.20",
+    "httpx>=0.28",
+    "yt-dlp>=2026.8.19",
+    "imageio-ffmpeg>=0.6",
+    "pywebview>=5.3",
+    # Mac Apple Silicon : moteurs MLX (Parakeet v3, Whisper turbo, Nemotron-3-Diarization)
+    "parakeet-mlx>=0.3; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "mlx-whisper>=0.4; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    "mlx-audio>=0.2; sys_platform == 'darwin' and platform_machine == 'arm64'",
+    # PC : faster-whisper (CUDA si dispo, sinon CPU)
+    "faster-whisper>=1.1; sys_platform != 'darwin'",
+    "nvidia-cublas-cu12; sys_platform == 'win32' or sys_platform == 'linux'",
+    "nvidia-cudnn-cu12>=9,<10; sys_platform == 'win32' or sys_platform == 'linux'",
+]
+
+[project.optional-dependencies]
+# Diarisation sur PC (pyannote, nécessite un token Hugging Face)
+diarisation-pc = ["pyannote.audio>=4"]
+
+[project.scripts]
+cours-ia = "cours_ia:main"
+
+[build-system]
+requires = ["uv_build>=0.13.2,<0.14.0"]
+build-backend = "uv_build"
